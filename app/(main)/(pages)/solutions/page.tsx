@@ -16,6 +16,9 @@ interface Solution {
   createdAt: string;
   questionId: string;
   solutionText: string; // Use the correct field name for solution text
+  subject: string;        // added
+  content: string;        // added
+  uploadDateTime: string; // added
 }
 
 export default function SoluionsPage() {
