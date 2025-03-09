@@ -12,12 +12,10 @@ interface Blog extends RowDataPacket {
 }
 
 export async function GET(
-  req: NextRequest,
-  context: Promise<{ params: { slung: string } }>
-) {
-  // Await the context so that params is resolved
-  const { params } = await context;
-  const { slung } = params;
+  request: NextRequest,
+  { params }: { params: Promise<{ slung: string }> }
+): Promise<NextResponse> {
+  const { slung } = await params;
 
   if (!slung) {
     return NextResponse.json({ error: "Slung is required" }, { status: 400 });
@@ -45,9 +43,6 @@ export async function GET(
     return NextResponse.json(rows[0]);
   } catch (error) {
     console.error("DB Error:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
