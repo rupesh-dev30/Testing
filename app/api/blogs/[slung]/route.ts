@@ -11,16 +11,13 @@ interface Blog extends RowDataPacket {
   createdAt: string;
 }
 
-// ✅ Correct Function Signature
-export async function GET(
-  req: NextRequest,
-  context: { params?: { slung?: string } } // ✅ Optional params to avoid undefined issues
-) {
-  if (!context.params?.slung) {
+export async function GET(req: NextRequest, context: { params: { slung: string } }) {
+  const { params } = context;
+  const { slung } = await params; // Await the params promise
+
+  if (!slung) {
     return NextResponse.json({ error: "Slung is required" }, { status: 400 });
   }
-
-  const { slung } = context.params;
 
   try {
     const [rows] = await pool.query<Blog[] & RowDataPacket[]>(
@@ -41,7 +38,7 @@ export async function GET(
       return NextResponse.json({ error: "Blog not found" }, { status: 404 });
     }
 
-    return NextResponse.json(rows[0]); // ✅ Return first blog
+    return NextResponse.json(rows[0]);
   } catch (error) {
     console.error("DB Error:", error);
     return NextResponse.json(
