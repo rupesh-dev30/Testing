@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "../../../../lib/db";
 import { RowDataPacket } from "mysql2/promise";
 
-// Define interface for Question
 interface Question extends RowDataPacket {
   id: number;
   title: string;
@@ -14,10 +13,10 @@ interface Question extends RowDataPacket {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
-  // Await the parameters since they are now a Promise
-  const { id } = await params;
+  // Await the params promise inside the function body
+  const { id } = await context.params;
 
   if (!id) {
     return NextResponse.json({ error: "ID is required" }, { status: 400 });
