@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "../../../lib/db";
 import { RowDataPacket } from "mysql2/promise";
 
+// Define the interface for a question
 interface Question extends RowDataPacket {
   id: string;
   title: string;
@@ -16,19 +17,29 @@ interface Question extends RowDataPacket {
   author: string;
 }
 
+// Correct function signature
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-): Promise<NextResponse> {
-  const { id } = await params;
+  context: { params: { id: string } } 
+) {
+  const { id } = context.params;
 
-  // Validate the id if needed
   if (!id) {
     return NextResponse.json({ error: "Missing question ID" }, { status: 400 });
   }
 
-  // Example query, adjust as needed
+  // Ensure the ID is a valid UUID
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(id)) {
+    return NextResponse.json(
+      { error: "Invalid question ID format" },
+      { status: 400 }
+    );
+  }
+
   try {
+    // Fetch the question using UUID
     const [rows] = await pool.query<Question[] & RowDataPacket[]>(
       `
       SELECT questions.*, admins.name AS author 
@@ -39,15 +50,23 @@ export async function GET(
     );
 
     if (rows.length === 0) {
-      return NextResponse.json({ error: "Question not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Question not found" },
+        { status: 404 }
+      );
     }
 
     const question = rows[0];
+
+    // Parse tags if they are not null
     question.tags = question.tags ? JSON.parse(question.tags) : [];
 
     return NextResponse.json(question);
   } catch (error) {
     console.error("Question API Error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "../../../../lib/db";
-import { RowDataPacket } from "mysql2/promise"; // Import MySQL types
-
-interface PageParams {
-  params: { id: string };
-}
+import { RowDataPacket } from "mysql2/promise";
 
 // Define interface for Question
 interface Question extends RowDataPacket {
@@ -16,8 +12,12 @@ interface Question extends RowDataPacket {
   uploadDateTime: string;
 }
 
-export async function GET(req: NextRequest, { params }: PageParams) {
-  const { id } = params; // Removed unnecessary `await`
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+): Promise<NextResponse> {
+  // Await the parameters since they are now a Promise
+  const { id } = await params;
 
   if (!id) {
     return NextResponse.json({ error: "ID is required" }, { status: 400 });
@@ -40,7 +40,6 @@ export async function GET(req: NextRequest, { params }: PageParams) {
 
     const question = rows[0];
 
-    // Parse tags safely
     return NextResponse.json({
       ...question,
       tags: question.tags ? JSON.parse(question.tags) : [],
