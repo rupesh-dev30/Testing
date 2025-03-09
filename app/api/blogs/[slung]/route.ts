@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "../../../../lib/db";
-import { RowDataPacket } from "mysql2/promise"; // Import correct type
+import { RowDataPacket } from "mysql2/promise";
 
 interface Blog extends RowDataPacket {
   id: number;
@@ -11,12 +11,16 @@ interface Blog extends RowDataPacket {
   createdAt: string;
 }
 
-export async function GET(req: NextRequest, context: { params: { slung: string } }) {
-  const { slung } = await context.params;
-
-  if (!slung) {
-    return NextResponse.json({ error: "slung is required" }, { status: 400 });
+// ✅ Correct Function Signature
+export async function GET(
+  req: NextRequest,
+  context: { params?: { slung?: string } } // ✅ Optional params to avoid undefined issues
+) {
+  if (!context.params?.slung) {
+    return NextResponse.json({ error: "Slung is required" }, { status: 400 });
   }
+
+  const { slung } = context.params;
 
   try {
     const [rows] = await pool.query<Blog[] & RowDataPacket[]>(
@@ -37,7 +41,7 @@ export async function GET(req: NextRequest, context: { params: { slung: string }
       return NextResponse.json({ error: "Blog not found" }, { status: 404 });
     }
 
-    return NextResponse.json(rows[0]); // Return the first blog
+    return NextResponse.json(rows[0]); // ✅ Return first blog
   } catch (error) {
     console.error("DB Error:", error);
     return NextResponse.json(
