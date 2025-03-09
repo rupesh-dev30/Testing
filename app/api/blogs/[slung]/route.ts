@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import pool from '../../../../lib/db';
-import { RowDataPacket } from 'mysql2/promise';
+import { NextRequest, NextResponse } from "next/server";
+import pool from "../../../../lib/db";
+import { RowDataPacket } from "mysql2/promise";
 
 interface Blog extends RowDataPacket {
   id: number;
@@ -13,23 +13,24 @@ interface Blog extends RowDataPacket {
 
 export async function GET(
   req: NextRequest,
-  context: { params: { slung: string } }
+  context: Promise<{ params: { slung: string } }>
 ) {
-  const { params } = context;
-  const { slung } = await params;
+  // Await the context so that params is resolved
+  const { params } = await context;
+  const { slung } = params;
 
   if (!slung) {
-    return NextResponse.json({ error: 'Slung is required' }, { status: 400 });
+    return NextResponse.json({ error: "Slung is required" }, { status: 400 });
   }
 
   try {
     const [rows] = await pool.query<Blog[] & RowDataPacket[]>(
-      `SELECT
-        b.id,
-        b.title,
-        b.content,
-        a.name AS author,
-        b.image,
+      `SELECT 
+        b.id, 
+        b.title, 
+        b.content, 
+        a.name AS author, 
+        b.image, 
         b.createdAt
       FROM blogs b
       JOIN admins a ON b.authorId = a.id
@@ -38,14 +39,14 @@ export async function GET(
     );
 
     if (rows.length === 0) {
-      return NextResponse.json({ error: 'Blog not found' }, { status: 404 });
+      return NextResponse.json({ error: "Blog not found" }, { status: 404 });
     }
 
-    return NextResponse.json(rows[0]); // Return the first blog
+    return NextResponse.json(rows[0]);
   } catch (error) {
-    console.error('DB Error:', error);
+    console.error("DB Error:", error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }
