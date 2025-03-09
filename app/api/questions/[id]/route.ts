@@ -17,18 +17,17 @@ interface Question extends RowDataPacket {
   author: string;
 }
 
-// Correct function signature
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } } 
-) {
-  const { id } = context.params;
+  context: { params: Promise<{ id: string }> }  // Note the Promise wrapper
+): Promise<NextResponse> {
+  const { id } = await context.params; // Await the params
 
   if (!id) {
     return NextResponse.json({ error: "Missing question ID" }, { status: 400 });
   }
 
-  // Ensure the ID is a valid UUID
+  // Ensure the ID is a valid UUID (optional)
   const uuidRegex =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(id)) {
@@ -39,7 +38,6 @@ export async function GET(
   }
 
   try {
-    // Fetch the question using UUID
     const [rows] = await pool.query<Question[] & RowDataPacket[]>(
       `
       SELECT questions.*, admins.name AS author 
